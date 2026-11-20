@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0F172A" />
+  <title>سندك — سندات أمانة ذكية</title>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"سندك","short_name":"سندك","start_url":"./","display":"standalone","background_color":"#0F172A","theme_color":"#0F172A","icons":[{"src":"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%230F172A%22/><path d=%22M30 40h40v8H30zm0 16h40v8H30z%22 fill=%22%23D4AF37%22/><circle cx=%2250%22 cy=%2228%22 r=%228%22 fill=%22%2310B981%22/></svg>","sizes":"192x192","type":"image/svg+xml"}]}' />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --navy: #0F172A;
+      --navy-light: #1E293B;
+      --gold: #D4AF37;
+      --gold-dark: #B4912A;
+      --emerald: #10B981;
+      --emerald-dark: #059669;
+      --emerald-glow: rgba(16, 185, 129, 0.15);
+      --gray-50: #F1F5F9;
+      --gray-100: #E2E8F0;
+      --gray-200: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-700: #334155;
+      --danger: #EF4444;
+      --danger-glow: rgba(239, 68, 68, 0.12);
+      --warning: #F59E0B;
+      --warning-glow: rgba(245, 158, 11, 0.12);
+      --info: #3B82F6;
+      --info-glow: rgba(59, 130, 246, 0.12);
+      
+      --radius: 20px;
+      --radius-sm: 14px;
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      --shadow-lg: 0 16px 48px rgba(15, 23, 42, 0.12);
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--navy);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .screen { display: none; min-height: 100vh; flex-direction: column; animation: fadeIn 0.35s ease; }
+    .screen.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+
+    #screen-auth {
+      background:
+        radial-gradient(800px 400px at 80% -10%, rgba(212, 175, 55, 0.15), transparent 60%),
+        radial-gradient(600px 400px at 10% 100%, rgba(16, 185, 129, 0.1), transparent 60%),
+        linear-gradient(160deg, #0F172A 0%, #1E293B 100%);
+      justify-content: center; align-items: center; padding: 32px 24px; text-align: center; color: white;
+    }
+    
+    .logo-svg { width: 90px; height: 90px; margin: 0 auto 16px; filter: drop-shadow(0 10px 24px rgba(16,185,129,0.3)); }
+    .logo-title { font-size: 38px; font-weight: 900; letter-spacing: -1px; background: linear-gradient(135deg, #FFF, var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo-sub { font-size: 14px; color: var(--gray-400); margin-top: 4px; margin-bottom: 36px; font-weight: 600; letter-spacing: 0.5px; }
+
+    .auth-tabs {
+      display: flex; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 6px;
+      max-width: 380px; width: 100%; margin-bottom: 24px; backdrop-filter: blur(10px);
+    }
+    .auth-tab {
+      flex: 1; padding: 12px; border-radius: 12px; border: none; cursor: pointer;
+      background: transparent; color: var(--gray-400); font-family: 'Cairo', sans-serif;
+      font-size: 14px; font-weight: 700; transition: var(--transition);
+    }
+    .auth-tab.active { background: linear-gradient(135deg, var(--emerald), var(--emerald-dark)); color: white; box-shadow: 0 4px 14px var(--emerald-glow); }
+
+    .auth-form { width: 100%; max-width: 380px; display: none; }
+    .auth-form.active { display: block; animation: fadeIn 0.3s; }
+
+    .input-group { margin-bottom: 16px; text-align: right; position: relative; }
+    .input-group label { display: block; font-size: 13px; color: var(--gray-400); margin-bottom: 8px; font-weight: 600; }
+    .input-group input {
+      width: 100%; padding: 15px 16px; border-radius: 14px; border: 1.5px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05); color: white; font-family: 'Cairo', sans-serif; font-size: 15px; outline: none; transition: var(--transition);
+    }
+    .input-group input::placeholder { color: rgba(255,255,255,0.3); }
+    .input-group input:focus { border-color: var(--gold); background: rgba(255,255,255,0.1); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
+    
+    .field-error { font-size: 12px; color: #FCA5A5; margin-top: 6px; display: none; font-weight: 600; }
+    .field-error.show { display: block; animation: fadeIn 0.2s; }
+    .input-error input { border-color: var(--danger) !important; }
+
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 16px; border-radius: 14px; border: none;
+      font-family: 'Cairo', sans-serif; font-size: 16px; font-weight: 800; cursor: pointer; transition: var(--transition);
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--emerald), var(--emerald-dark));
+      color: white; box-shadow: 0 8px 24px var(--emerald-glow);
+    }
+    .btn-primary:hover { filter: brightness(1.1); box-shadow: 0 12px 32px rgba(16, 185, 129, 0.25); }
+    .btn-outline { background: var(--surface); color: var(--navy); border: 1.5px solid var(--gray-200); box-shadow: var(--shadow-sm); }
+    .btn-outline:hover { border-color: var(--emerald); color: var(--emerald-dark); }
+    .btn-danger { background: var(--danger-glow); color: var(--danger); }
+    .btn-danger:hover { background: rgba(239,68,68,0.2); }
+    .btn-small { width: auto; padding: 10px 20px; font-size: 14px; border-radius: 12px; }
+
+    .app-header {
+      background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px);
+      color: var(--navy); padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top));
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50; border-bottom: 1px solid var(--gray-100);
+    }
+    .app-header h1 { font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+    .app-header h1 svg { width: 26px; height: 26px; }
+    .icon-btn {
+      width: 42px; height: 42px; border-radius: 14px; background: var(--gray-50);
+      border: none; color: var(--navy); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: var(--transition);
+    }
+    .icon-btn:hover { background: var(--gray-100); }
+    .badge {
+      position: absolute; top: -4px; left: -4px; background: var(--danger); color: white;
+      font-size: 10px; font-weight: 800; min-width: 18px; height: 18px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; padding: 0 4px;
+      border: 2px solid var(--surface);
+    }
+    .badge.hidden { display: none; }
+
+    .content { flex: 1; padding: 20px; padding-bottom: 110px; overflow-y: auto; max-width: 600px; width: 100%; margin: 0 auto; }
+
+    .greeting h2 { font-size: 24px; font-weight: 900; color: var(--navy); }
+    .greeting p { font-size: 14px; color: var(--gray-500); margin-top: 4px; margin-bottom: 24px; }
+
+    .hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--surface); border-radius: var(--radius); padding: 18px;
+      box-shadow: var(--shadow); border: 1px solid var(--gray-100); position: relative; overflow: hidden;
+    }
+    .stat-card::before { content: ''; position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 5px; border-radius: 5px 0 0 5px; }
+    .stat-card.c-emerald::before { background: var(--emerald); }
+    .stat-card.c-gold::before { background: var(--gold); }
+    .stat-card.c-warning::before { background: var(--warning); }
+    .stat-card.c-danger::before { background: var(--danger); }
+    .stat-card .num { font-size: 22px; font-weight: 900; color: var(--navy); }
+    .stat-card .lbl { font-size: 13px; color: var(--gray-500); margin-top: 4px; font-weight: 600; }
+
+    .alert-banner {
+      background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.02));
+      border: 1px solid rgba(245,158,11,0.2); color: #B45309;
+      border-radius: var(--radius-sm); padding: 14px 18px; font-size: 14px; font-weight: 700;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: var(--transition);
+    }
+    .alert-banner:hover { background: rgba(245,158,11,0.15); }
+
+    .main-action {
+      background: linear-gradient(135deg, var(--navy), var(--navy-light));
+      color: white; border-radius: var(--radius); padding: 22px;
+      display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+      box-shadow: var(--shadow-lg); cursor: pointer; transition: var(--transition); position: relative; overflow: hidden;
+    }
+    .main-action::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.05) 100%); pointer-events: none; }
+    .main-action:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2); }
+    .main-action .icon { width: 56px; height: 56px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .main-action h3 { font-size: 18px; font-weight: 800; }
+    .main-action p { font-size: 13px; color: var(--gray-400); margin-top: 4px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .mini-card {
+      background: var(--surface); border-radius: var(--radius-sm); padding: 20px 16px;
+      box-shadow: var(--shadow); border: 1px solid var(--gray-100); text-align: center; cursor: pointer; transition: var(--transition);
+    }
+    .mini-card:hover { border-color: var(--emerald); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .mini-card .icon { font-size: 28px; margin-bottom: 10px; }
+    .mini-card h4 { font-size: 15px; font-weight: 700; color: var(--navy); }
+
+    .section-title { font-size: 17px; font-weight: 900; color: var(--navy); margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .section-title span { font-size: 13px; font-weight: 700; color: var(--emerald); cursor: pointer; }
+
+    .sanad-card {
+      background: var(--surface); border-radius: var(--radius-sm); padding: 18px;
+      box-shadow: var(--shadow-sm); margin-bottom: 12px; border: 1px solid var(--gray-100);
+      border-inline-start: 5px solid var(--emerald); cursor: pointer; transition: var(--transition);
+    }
+    .sanad-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--gray-200); }
+    .sanad-card.warning { border-inline-start-color: var(--warning); }
+    .sanad-card.danger { border-inline-start-color: var(--danger); }
+    .sanad-card.info { border-inline-start-color: var(--info); }
+    .sanad-card.gray { border-inline-start-color: var(--gray-300); }
+    
+    .sanad-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .sanad-info h4 { font-size: 16px; font-weight: 800; margin-bottom: 4px; color: var(--navy); }
+    .sanad-info p { font-size: 12px; color: var(--gray-500); font-weight: 600; }
+    .sanad-amount { text-align: left; }
+    .sanad-amount .amount { font-size: 17px; font-weight: 900; color: var(--navy); }
+    .status { font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-top: 6px; display: inline-block; }
+    .status.active { background: var(--emerald-glow); color: var(--emerald-dark); }
+    .status.pending { background: var(--warning-glow); color: #B45309; }
+    .status.expired { background: var(--danger-glow); color: var(--danger); }
+    .status.paid { background: var(--info-glow); color: var(--info); }
+    
+    .progress-wrap { margin-top: 14px; }
+    .progress-track { height: 8px; background: var(--gray-100); border-radius: 8px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--emerald), var(--emerald-dark)); border-radius: 8px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .progress-txt { font-size: 12px; color: var(--gray-500); margin-top: 8px; display: flex; justify-content: space-between; font-weight: 600; }
+
+    .filter-bar { display: flex; gap: 10px; margin-bottom: 18px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0; padding: 10px 20px; border-radius: 24px; border: 1.5px solid var(--gray-200);
+      background: var(--surface); font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700;
+      color: var(--gray-500); cursor: pointer; transition: var(--transition);
+    }
+    .chip.active { background: var(--navy); color: white; border-color: var(--navy); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); }
+    
+    .search-box { position: relative; margin-bottom: 18px; }
+    .search-box input {
+      width: 100%; padding: 15px 46px 15px 18px; border-radius: 16px;
+      border: 1.5px solid var(--gray-200); background: var(--surface);
+      font-family: 'Cairo', sans-serif; font-size: 15px; outline: none; transition: var(--transition); box-shadow: var(--shadow-sm);
+    }
+    .search-box input:focus { border-color: var(--emerald); box-shadow: 0 0 0 4px var(--emerald-glow); }
+    .search-box .s-icon { position: absolute; inset-inline-start: 16px; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 18px; }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(20px);
+      display: flex; justify-content: space-around; padding: 10px 8px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.06); border-top: 1px solid var(--gray-100); z-index: 100;
+      max-width: 600px; margin: 0 auto;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      background: none; border: none; color: var(--gray-400);
+      font-family: 'Cairo', sans-serif; font-size: 11px; font-weight: 700; cursor: pointer; padding: 6px 12px; border-radius: 12px; transition: var(--transition);
+    }
+    .nav-item.active { color: var(--emerald); }
+    .nav-item .nav-icon { font-size: 22px; }
+    .nav-item.add-btn {
+      background: linear-gradient(135deg, var(--emerald), var(--emerald-dark));
+      color: white; width: 56px; height: 56px; border-radius: 18px;
+      margin-top: -24px; box-shadow: 0 8px 24px var(--emerald-glow); justify-content: center; font-size: 28px; padding: 0;
+    }
+    .nav-item.add-btn:hover { transform: scale(1.05); }
+
+    .card { background: var(--surface); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); margin-bottom: 18px; border: 1px solid var(--gray-100); }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 15px 16px; border-radius: 14px; border: 1.5px solid var(--gray-200);
+      background: var(--gray-50); font-family: 'Cairo', sans-serif; font-size: 15px; color: var(--navy); outline: none; transition: var(--transition); font-weight: 600;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--emerald); background: var(--surface); box-shadow: 0 0 0 4px var(--emerald-glow); }
+    .form-group input[readonly] { background: var(--gray-100); color: var(--gray-500); cursor: not-allowed; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .detail-hero {
+      background: linear-gradient(135deg, var(--navy), var(--navy-light));
+      color: white; border-radius: var(--radius); padding: 28px 20px;
+      text-align: center; margin-bottom: 18px; position: relative; overflow: hidden; box-shadow: var(--shadow-lg);
+    }
+    .detail-hero::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); pointer-events: none; }
+    .detail-hero .big-amount { font-size: 36px; font-weight: 900; margin: 14px 0 6px; color: var(--gold); }
+    .detail-hero .sid { font-size: 13px; color: var(--gray-400); font-weight: 600; letter-spacing: 1px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--gray-100); font-size: 14px; font-weight: 600; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row span:first-child { color: var(--gray-500); }
+    .detail-row span:last-child { font-weight: 800; color: var(--navy); }
+    
+    .payment-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--gray-100); font-size: 14px; }
+    .payment-item:last-child { border-bottom: none; }
+    .payment-item .p-amt { font-weight: 900; color: var(--emerald-dark); font-size: 15px; }
+    .payment-item .p-date { color: var(--gray-500); font-size: 12px; font-weight: 600; margin-top: 2px; }
+    .payment-item .del { color: var(--danger); cursor: pointer; font-size: 18px; padding: 6px 10px; border-radius: 10px; background: var(--danger-glow); transition: var(--transition); }
+    .payment-item .del:hover { background: rgba(239,68,68,0.2); }
+    .actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+
+    .profile-header { text-align: center; padding: 24px 0 16px; }
+    .avatar {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--navy), var(--navy-light));
+      color: var(--gold); font-size: 36px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2); border: 4px solid var(--surface);
+    }
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0 24px; }
+    .stat-box { background: var(--surface); border-radius: var(--radius-sm); padding: 16px 8px; text-align: center; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-100); }
+    .stat-box .num { font-size: 20px; font-weight: 900; color: var(--navy); }
+    .stat-box .label { font-size: 12px; color: var(--gray-500); margin-top: 4px; font-weight: 600; }
+
+    .menu-list { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--gray-100); }
+    .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--gray-100); font-size: 15px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+    .menu-item:hover { background: var(--gray-50); }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item span:first-child { display: flex; align-items: center; gap: 12px; }
+
+    .drawer-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 200; opacity: 0; pointer-events: none; transition: var(--transition); }
+    .drawer-overlay.show { opacity: 1; pointer-events: auto; }
+    .drawer {
+      position: fixed; top: 0; bottom: 0; right: 0; width: min(380px, 90vw);
+      background: var(--surface); z-index: 201; transform: translateX(105%); transition: var(--transition);
+      display: flex; flex-direction: column; box-shadow: -10px 0 40px rgba(0,0,0,0.15);
+    }
+    .drawer.show { transform: translateX(0); }
+    .drawer-head { padding: 20px; border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: center; }
+    .drawer-head h3 { font-size: 18px; font-weight: 900; }
+    .drawer-body { flex: 1; overflow-y: auto; padding: 16px; }
+    .notif-item { display: flex; gap: 14px; padding: 16px; border-radius: 16px; margin-bottom: 12px; background: var(--gray-50); cursor: pointer; border-inline-start: 4px solid var(--gray-300); transition: var(--transition); }
+    .notif-item:hover { background: var(--gray-100); }
+    .notif-item.unread { background: var(--surface); box-shadow: var(--shadow-sm); border-inline-start-color: var(--emerald); }
+    .notif-item .n-icon { font-size: 24px; }
+    .notif-item h5 { font-size: 14px; font-weight: 800; margin-bottom: 4px; color: var(--navy); }
+    .notif-item p { font-size: 13px; color: var(--gray-500); font-weight: 600; }
+    .notif-item .n-time { font-size: 11px; color: var(--gray-400); margin-top: 6px; font-weight: 600; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: var(--transition); }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal-box { background: var(--surface); border-radius: 24px; padding: 28px; width: 100%; max-width: 400px; transform: scale(0.95); transition: var(--transition); box-shadow: var(--shadow-lg); }
+    .modal-overlay.show .modal-box { transform: scale(1); }
+    .modal-box h3 { font-size: 20px; font-weight: 900; margin-bottom: 10px; color: var(--navy); }
+    .modal-box p { font-size: 15px; color: var(--gray-500); margin-bottom: 24px; line-height: 1.7; font-weight: 600; }
+    .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-500); font-weight: 600; }
+    .empty-state .icon { font-size: 56px; margin-bottom: 16px; opacity: 0.4; }
+    .toast {
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px);
+      background: var(--navy); color: white; padding: 14px 28px; border-radius: 30px;
+      font-size: 14px; font-weight: 800; z-index: 999; opacity: 0; transition: var(--transition);
+      pointer-events: none; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 8px;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--emerald-dark); }
+    .toast.error { background: var(--danger); }
+    .hidden { display: none !important; }
+    .text-danger { color: var(--danger) !important; }
+    .text-muted { color: var(--gray-500); font-size: 13px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- ===== AUTH ===== -->
+  <div id="screen-auth" class="screen active">
+    <div>
+      <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="24" fill="url(#paint0_linear)"/>
+        <path d="M30 45H70V55H30V45ZM30 60H70V70H30V60Z" fill="#D4AF37"/>
+        <circle cx="50" cy="28" r="9" fill="#10B981"/>
+        <path d="M50 19V37M41 28H59" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="paint0_linear" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#1E293B"/>
+            <stop offset="1" stop-color="#0F172A"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="logo-title">سندك</div>
+      <div class="logo-sub">سندات أمانة ذكية وموثوقة</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuth('login')">تسجيل الدخول</button>
+      <button class="auth-tab" id="tab-register" onclick="switchAuth('register')">حساب جديد</button>
+    </div>
+
+    <form class="auth-form active" id="form-login" onsubmit="return doLogin(event)">
+      <div class="input-group">
+        <label>رقم الهاتف</label>
+        <input type="tel" id="l-phone" placeholder="05xxxxxxxx" autocomplete="tel">
+        <div class="field-error" id="err-l-phone"></div>
+      </div>
+      <div class="input-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
+        <div class="field-error" id="err-l-pass"></div>
+      </div>
+      <button type="submit" class="btn btn-primary">دخول</button>
+    </form>
+
+    <form class="auth-form" id="form-register" onsubmit="return doRegister(event)">
+      <div class="input-group">
+        <label>الاسم الكامل</label>
+        <input type="text" id="r-name" placeholder="مثال: أحمد بن علي">
+        <div class="field-error" id="err-r-name"></div>
+      </div>
+      <div class="input-group">
+        <label>رقم الهاتف</label>
+        <input type="tel" id="r-phone" placeholder="05xxxxxxxx">
+        <div class="field-error" id="err-r-phone"></div>
+      </div>
+      <div class="input-group">
+        <label>كلمة المرور (6 أحرف فأكثر)</label>
+        <input type="password" id="r-pass" placeholder="••••••••">
+        <div class="field-error" id="err-r-pass"></div>
+      </div>
+      <div class="input-group">
+        <label>تأكيد كلمة المرور</label>
+        <input type="password" id="r-pass2" placeholder="••••••••">
+        <div class="field-error" id="err-r-pass2"></div>
+      </div>
+      <button type="submit" class="btn btn-primary">إنشاء الحساب</button>
+    </form>
+  </div>
+
+  <!-- ===== HOME ===== -->
+  <div id="screen-home" class="screen">
+    <div class="app-header">
+      <h1>
+        <svg viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="24" fill="#0F172A"/><path d="M30 45H70V55H30V45ZM30 60H70V70H30V60Z" fill="#D4AF37"/><circle cx="50" cy="28" r="9" fill="#10B981"/></svg>
+        سندك
+      </h1>
+      <button class="icon-btn" onclick="openDrawer()">🔔<span class="badge hidden" id="notif-badge"></span></button>
+    </div>
+    <div class="content">
+      <div class="greeting">
+        <h2 id="greet-name">مرحباً 👋</h2>
+        <p>إدارة سندات الأمانة بذكاء وأمان</p>
+      </div>
+
+      <div id="due-alert"></div>
+
+      <div class="hero-stats">
+        <div class="stat-card c-gold"><div class="num" id="st-lent">0 دج</div><div class="lbl">إجمالي المُقرض</div></div>
+        <div class="stat-card c-emerald"><div class="num" id="st-remain">0 دج</div><div class="lbl">المتبقي للتحصيل</div></div>
+        <div class="stat-card c-warning"><div class="num" id="st-active">0</div><div class="lbl">سندات سارية</div></div>
+        <div class="stat-card c-danger"><div class="num" id="st-overdue">0</div><div class="lbl">سندات متأخرة</div></div>
+      </div>
+
+      <div class="main-action" onclick="showScreen('create')">
+        <div class="icon">➕</div>
+        <div><h3>إصدار سند أمانة جديد</h3><p>أنشئ سندًا رقميًا موثوقًا في ثوانٍ</p></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="mini-card" onclick="showScreen('verify')"><div class="icon">🔍</div><h4>التحقق من سند</h4></div>
+        <div class="mini-card" onclick="showScreen('mysanads')"><div class="icon">📋</div><h4>سنداتي</h4></div>
+      </div>
+
+      <div class="section-title">آخر السندات <span onclick="showScreen('mysanads')">عرض الكل</span></div>
+      <div id="home-sanads-list"></div>
+    </div>
+    <div class="bottom-nav" id="nav-home"></div>
+  </div>
+
+  <!-- ===== CREATE / EDIT ===== -->
+  <div id="screen-create" class="screen">
+    <div class="app-header">
+      <button class="icon-btn" onclick="showScreen('mysanads')">→</button>
+      <h1 id="create-title">إصدار سند أمانة</h1>
+      <div style="width:42px"></div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="form-group">
+          <label>الدائن (أنت)</label>
+          <input type="text" id="f-creditor" readonly>
+        </div>
+        <div class="form-group">
+          <label>المدين (من عليه الدين) *</label>
+          <input type="text" id="f-debtor" placeholder="الاسم الكامل">
+          <div class="field-error" id="err-f-debtor"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>رقم هاتف المدين</label>
+            <input type="tel" id="f-phone" placeholder="05xxxxxxxx">
+            <div class="field-error" id="err-f-phone"></div>
+          </div>
+          <div class="form-group">
+            <label>المبلغ (دج) *</label>
+            <input type="number" id="f-amount" placeholder="50000" min="1">
+            <div class="field-error" id="err-f-amount"></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>تاريخ الاستحقاق *</label>
+            <input type="date" id="f-date">
+            <div class="field-error" id="err-f-date"></div>
+          </div>
+          <div class="form-group">
+            <label>طريقة السداد</label>
+            <select id="f-method">
+              <option value="نقدي">نقدي</option>
+              <option value="تحويل بنكي">تحويل بنكي</option>
+              <option value="CCP">CCP</option>
+              <option value="بضاعة">بضاعة / خدمة</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>الوصف / الملاحظات</label>
+          <textarea id="f-note" rows="3" placeholder="اختياري..."></textarea>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveSanad()" id="btn-save-sanad">حفظ السند</button>
+    </div>
+  </div>
+
+  <!-- ===== MY SANADS ===== -->
+  <div id="screen-mysanads" class="screen">
+    <div class="app-header">
+      <button class="icon-btn" onclick="showScreen('home')">→</button>
+      <h1>سنداتي</h1>
+      <div style="width:42px"></div>
+    </div>
+    <div class="content">
+      <div class="search-box">
+        <span class="s-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="ابحث بالاسم أو رقم السند..." oninput="renderMySanads()">
+      </div>
+      <div class="filter-bar" id="filter-bar">
+        <button class="chip active" data-f="all" onclick="setFilter('all')">الكل</button>
+        <button class="chip" data-f="active" onclick="setFilter('active')">سارية</button>
+        <button class="chip" data-f="pending" onclick="setFilter('pending')">قاربت الانتهاء</button>
+        <button class="chip" data-f="expired" onclick="setFilter('expired')">متأخرة</button>
+        <button class="chip" data-f="paid" onclick="setFilter('paid')">مسددة</button>
+      </div>
+      <div id="mysanads-list"></div>
+    </div>
+    <div class="bottom-nav" id="nav-mysanads"></div>
+  </div>
+
+  <!-- ===== DETAIL ===== -->
+  <div id="screen-detail" class="screen">
+    <div class="app-header">
+      <button class="icon-btn" onclick="showScreen('mysanads')">→</button>
+      <h1>تفاصيل السند</h1>
+      <div style="width:42px"></div>
+    </div>
+    <div class="content" id="detail-content"></div>
+  </div>
+
+  <!-- ===== VERIFY ===== -->
+  <div id="screen-verify" class="screen">
+    <div class="app-header">
+      <button class="icon-btn" onclick="showScreen('home')">→</button>
+      <h1>التحقق من سند</h1>
+      <div style="width:42px"></div>
+    </div>
+    <div class="content">
+      <div class="card" style="text-align:center; padding:32px 20px;">
+        <div style="font-size:54px; margin-bottom:16px;">🔍</div>
+        <h3 style="font-size:20px; margin-bottom:8px; color:var(--navy);">تحقق من صحة أي سند</h3>
+        <p class="text-muted" style="margin-bottom:24px;">أدخل رقم السند أو افتح رابط المشاركة المرسل إليك</p>
+        <div class="form-group" style="text-align:right">
+          <input type="text" id="verify-input" placeholder="مثال: SND-0001" style="text-align:center; letter-spacing:1px; font-size:18px; font-weight:800;">
+        </div>
+        <button class="btn btn-primary" onclick="doVerify()">تحقق الآن</button>
+      </div>
+      <div id="verify-result" class="hidden"></div>
+    </div>
+    <div class="bottom-nav" id="nav-verify"></div>
+  </div>
+
+  <!-- ===== PROFILE ===== -->
+  <div id="screen-profile" class="screen">
+    <div class="app-header">
+      <button class="icon-btn" onclick="showScreen('home')">→</button>
+      <h1>حسابي</h1>
+      <div style="width:42px"></div>
+    </div>
+    <div class="content">
+      <div class="profile-header">
+        <div class="avatar" id="avatar-letter">س</div>
+        <h2 style="font-size:22px; font-weight:900;" id="profile-name">مستخدم</h2>
+        <p class="text-muted" id="profile-phone"></p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="num" id="pf-total">0</div><div class="label">إجمالي السندات</div></div>
+        <div class="stat-box"><div class="num" id="pf-collected">0%</div><div class="label">نسبة التحصيل</div></div>
+        <div class="stat-box"><div class="num" id="pf-trust">—</div><div class="label">درجة الثقة</div></div>
+      </div>
+      <div class="menu-list">
+        <div class="menu-item" onclick="openEditProfile()"><span>✏️ تعديل الاسم</span><span>‹</span></div>
+        <div class="menu-item" onclick="openDrawer()"><span>🔔 الإشعارات</span><span>‹</span></div>
+        <div class="menu-item" onclick="exportData()"><span>💾 تصدير بياناتي (JSON)</span><span>‹</span></div>
+        <div class="menu-item" onclick="clearAllData()"><span class="text-danger">🗑️ مسح جميع السندات</span><span></span></div>
+        <div class="menu-item" style="color:var(--danger)" onclick="logout()"><span>🚪 تسجيل الخروج</span><span></span></div>
+      </div>
+    </div>
+    <div class="bottom-nav" id="nav-profile"></div>
+  </div>
+
+  <!-- ===== NOTIFICATIONS DRAWER ===== -->
+  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-head">
+      <h3>الإشعارات</h3>
+      <button class="icon-btn" style="background:var(--gray-100); color:var(--navy);" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="drawer-body" id="drawer-body"></div>
+  </div>
+
+  <!-- ===== MODAL ===== -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-box">
+      <h3 id="modal-title"></h3>
+      <p id="modal-body"></p>
+      <div class="modal-actions" id="modal-actions"></div>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    const DB = {
+      get(k, def) { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } },
+      set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+    };
+    const K = { users: 'sandakpro_users_v2', session: 'sandakpro_session_v2', sanads: 'sandakpro_sanads_v2', notifs: 'sandakpro_notifs_v2' };
+
+    let users = DB.get(K.users, []);
+    let session = DB.get(K.session, null);
+    let sanads = DB.get(K.sanads, []);
+    let notifs = DB.get(K.notifs, []);
+    let currentFilter = 'all';
+    let editingId = null;
+    let detailId = null;
+    const SECRET_KEY = 'sandak_secure_signature_key_v2';
+
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    function hash(str) {
+      let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0;
+      for (let i = 0, ch; i < str.length; i++) {
+        ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+    }
+    
+    function signPayload(payload) {
+      const data = JSON.stringify(payload);
+      return btoa(unescape(encodeURIComponent(data))) + '.' + hash(data + SECRET_KEY);
+    }
+    
+    function verifySignature(signedPayload) {
+      try {
+        const parts = signedPayload.split('.');
+        if (parts.length !== 2) return null;
+        const dataStr = decodeURIComponent(escape(atob(parts[0])));
+        if (hash(dataStr + SECRET_KEY).toString() !== parts[1]) return null;
+        return JSON.parse(dataStr);
+      } catch { return null; }
+    }
+
+    function formatMoney(n) { return Number(n || 0).toLocaleString('ar-DZ') + ' دج'; }
+    function formatDate(d) {
+      if (!d) return '—';
+      const dt = new Date(d);
+      if (isNaN(dt)) return '—';
+      return dt.toLocaleDateString('ar-DZ', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    function daysUntil(dateStr) {
+      const t = new Date(); t.setHours(0,0,0,0);
+      const d = new Date(dateStr); d.setHours(0,0,0,0);
+      return Math.round((d - t) / 86400000);
+    }
+    function paidOf(s) { return (s.payments || []).reduce((a, p) => a + Number(p.amount), 0); }
+    function remainingOf(s) { return Math.max(0, Number(s.amount) - paidOf(s)); }
+
+    function getStatus(s) {
+      if (remainingOf(s) <= 0 && Number(s.amount) > 0)
+        return { key: 'paid', label: 'مسدد ✓', cls: 'info' };
+      const diff = daysUntil(s.date);
+      if (diff < 0) return { key: 'expired', label: 'متأخر', cls: 'danger' };
+      if (diff <= 7) return { key: 'pending', label: diff === 0 ? 'يستحق اليوم' : `متبقي ${diff} يوم`, cls: 'warning' };
+      return { key: 'active', label: 'ساري', cls: '' };
+    }
+
+    function generateId() {
+      let n = sanads.reduce((m, s) => {
+        const match = /SND-(\d+)/.exec(s.id || '');
+        return match ? Math.max(m, parseInt(match[1])) : m;
+      }, 0) + 1;
+      return 'SND-' + String(n).padStart(4, '0');
+    }
+
+    function currentUser() { return users.find(u => u.phone === session) || null; }
+    function mySanads() { return sanads.filter(s => s.owner === session); }
+
+    let toastTimer;
+    function showToast(msg, type = '') {
+      const t = $('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + type;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function openModal(title, body, actions) {
+      $('modal-title').textContent = title;
+      $('modal-body').innerHTML = body;
+      $('modal-actions').innerHTML = actions.map(a =>
+        `<button class="btn ${a.cls || 'btn-outline'}" onclick="${a.fn}">${a.label}</button>`
+      ).join('');
+      $('modal-overlay').classList.add('show');
+    }
+    function closeModal() { $('modal-overlay').classList.remove('show'); }
+    $('modal-overlay').addEventListener('click', e => { if (e.target === $('modal-overlay')) closeModal(); });
+
+    function switchAuth(mode) {
+      $('tab-login').classList.toggle('active', mode === 'login');
+      $('tab-register').classList.toggle('active', mode === 'register');
+      $('form-login').classList.toggle('active', mode === 'login');
+      $('form-register').classList.toggle('active', mode === 'register');
+    }
+
+    function setFieldError(id, msg) {
+      const err = $('err-' + id), grp = $(id)?.closest('.input-group, .form-group');
+      if (msg) { err.textContent = msg; err.classList.add('show'); grp?.classList.add('input-error'); }
+      else { err.classList.remove('show'); grp?.classList.remove('input-error'); }
+    }
+
+    function validPhone(p) { return /^0[5-7]\d{8}$/.test(p); }
+
+    function doLogin(e) {
+      e.preventDefault();
+      const phone = $('l-phone').value.trim(), pass = $('l-pass').value;
+      let ok = true;
+      setFieldError('l-phone', !validPhone(phone) ? 'أدخل رقم هاتف جزائري صحيح (05xxxxxxxx)' : ''); if (!validPhone(phone)) ok = false;
+      setFieldError('l-pass', pass.length < 6 ? 'كلمة المرور 6 أحرف فأكثر' : ''); if (pass.length < 6) ok = false;
+      if (!ok) return false;
+
+      const u = users.find(x => x.phone === phone);
+      if (!u) { setFieldError('l-phone', 'لا يوجد حساب بهذا الرقم — أنشئ حساباً جديداً'); return false; }
+      if (u.pass !== hash(pass).toString()) { setFieldError('l-pass', 'كلمة المرور غير صحيحة'); return false; }
+
+      session = phone; DB.set(K.session, session);
+      enterApp();
+      showToast('مرحباً بعودتك، ' + u.name.split(' ')[0] + ' 👋', 'success');
+      return false;
+    }
+
+    function doRegister(e) {
+      e.preventDefault();
+      const name = $('r-name').value.trim(), phone = $('r-phone').value.trim();
+      const p1 = $('r-pass').value, p2 = $('r-pass2').value;
+      let ok = true;
+      setFieldError('r-name', name.length < 3 ? 'أدخل الاسم الكامل' : ''); if (name.length < 3) ok = false;
+      setFieldError('r-phone', !validPhone(phone) ? 'رقم هاتف جزائري صحيح مطلوب' : ''); if (!validPhone(phone)) ok = false;
+      setFieldError('r-pass', p1.length < 6 ? '6 أحرف فأكثر' : ''); if (p1.length < 6) ok = false;
+      setFieldError('r-pass2', p1 !== p2 ? 'كلمتا المرور غير متطابقتين' : ''); if (p1 !== p2) ok = false;
+      if (!ok) return false;
+
+      if (users.some(u => u.phone === phone)) {
+        setFieldError('r-phone', 'هذا الرقم مسجل مسبقاً — سجل دخولك');
+        return false;
+      }
+      users.push({ name, phone, pass: hash(p1).toString(), createdAt: new Date().toISOString() });
+      DB.set(K.users, users);
+      session = phone; DB.set(K.session, session);
+      enterApp();
+      showToast('تم إنشاء حسابك بنجاح ✓', 'success');
+      return false;
+    }
+
+    function logout() {
+      openModal('تسجيل الخروج', 'هل أنت متأكد من رغبتك في تسجيل الخروج؟', [
+        { label: 'إلغاء', fn: 'closeModal()' },
+        { label: 'خروج', cls: 'btn-danger', fn: 'confirmLogout()' }
+      ]);
+    }
+    function confirmLogout() {
+      session = null; DB.set(K.session, null);
+      closeModal();
+      switchAuth('login');
+      showScreen('auth');
+    }
+
+    function showScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const el = $('screen-' + name);
+      if (el) el.classList.add('active');
+      window.scrollTo(0, 0);
+      closeDrawer();
+      if (name === 'home') renderHome();
+      if (name === 'mysanads') renderMySanads();
+      if (name === 'profile') renderProfile();
+      renderNav(name);
+    }
+
+    function renderNav(active) {
+      const items = [
+        { id: 'home', icon: '🏠', label: 'الرئيسية' },
+        { id: 'mysanads', icon: '📋', label: 'سنداتي' },
+        { id: 'create', icon: '＋', label: '', isAdd: true },
+        { id: 'verify', icon: '🔍', label: 'تحقق' },
+        { id: 'profile', icon: '👤', label: 'حسابي' }
+      ];
+      const html = items.map(item => {
+        if (item.isAdd) return `<button class="nav-item add-btn" onclick="showScreen('create')">＋</button>`;
+        const cls = active === item.id ? 'nav-item active' : 'nav-item';
+        return `<button class="${cls}" onclick="showScreen('${item.id}')"><span class="nav-icon">${item.icon}</span>${item.label}</button>`;
+      }).join('');
+      ['nav-home', 'nav-mysanads', 'nav-verify', 'nav-profile'].forEach(id => { const el = $(id); if (el) el.innerHTML = html; });
+    }
+
+    function enterApp() {
+      const u = currentUser();
+      $('greet-name').textContent = 'مرحباً، ' + (u ? u.name.split(' ')[0] : '') + ' 👋';
+      showScreen('home');
+      generateNotifications();
+    }
+
+    function generateNotifications() {
+      const today = new Date().toISOString().slice(0, 10);
+      mySanads().forEach(s => {
+        const st = getStatus(s).key;
+        if (st === 'expired' || st === 'pending') {
+          const key = s.id + ':' + today + ':' + st;
+          if (!notifs.some(n => n.key === key)) {
+            notifs.unshift({
+              key,
+              sanadId: s.id,
+              icon: st === 'expired' ? '🔴' : '⏰',
+              title: st === 'expired' ? 'سند متأخر عن الاستحقاق' : 'سند يقترب من الاستحقاق',
+              text: `${s.debtor} — ${formatMoney(remainingOf(s))}`,
+              time: new Date().toISOString(),
+              read: false
+            });
+          }
+        }
+      });
+      notifs = notifs.slice(0, 50);
+      DB.set(K.notifs, notifs);
+      updateBadge();
+    }
+
+    function updateBadge() {
+      const unread = notifs.filter(n => !n.read).length;
+      const b = $('notif-badge');
+      b.textContent = unread;
+      b.classList.toggle('hidden', unread === 0);
+    }
+
+    function openDrawer() {
+      $('drawer-body').innerHTML = notifs.length ? notifs.map(n => `
+        <div class="notif-item ${n.read ? '' : 'unread'}" onclick="openNotif('${n.sanadId}')">
+          <div class="n-icon">${n.icon}</div>
+          <div style="flex:1">
+            <h5>${esc(n.title)}</h5>
+            <p>${esc(n.text)}</p>
+            <div class="n-time">${formatDate(n.time)}</div>
+          </div>
+        </div>`).join('')
+        : `<div class="empty-state"><div class="icon">🔕</div><p>لا توجد إشعارات</p></div>`;
+      $('drawer-overlay').classList.add('show');
+      $('drawer').classList.add('show');
+      notifs.forEach(n => n.read = true);
+      DB.set(K.notifs, notifs);
+      updateBadge();
+    }
+    function closeDrawer() {
+      $('drawer-overlay').classList.remove('show');
+      $('drawer').classList.remove('show');
+    }
+    function openNotif(id) {
+      closeDrawer();
+      openDetail(id);
+    }
+
+    function renderHome() {
+      const list = mySanads();
+      const lent = list.reduce((a, s) => a + Number(s.amount), 0);
+      const remain = list.reduce((a, s) => a + remainingOf(s), 0);
+      const active = list.filter(s => ['active', 'pending'].includes(getStatus(s).key)).length;
+      const overdue = list.filter(s => getStatus(s).key === 'expired').length;
+
+      $('st-lent').textContent = formatMoney(lent);
+      $('st-remain').textContent = formatMoney(remain);
+      $('st-active').textContent = active;
+      $('st-overdue').textContent = overdue;
+
+      const dueSoon = list.filter(s => getStatus(s).key === 'pending' || getStatus(s).key === 'expired');
+      $('due-alert').innerHTML = dueSoon.length ? `
+        <div class="alert-banner" onclick="showScreen('mysanads')">
+          ⚠️ لديك ${dueSoon.length} ${dueSoon.length === 1 ? 'سند يحتاج' : 'سندات تحتاج'} متابعة عاجلة — اضغط للعرض
+        </div>` : '';
+
+      const box = $('home-sanads-list');
+      if (!list.length) {
+        box.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>لا توجد سندات بعد<br>ابدأ بإنشاء أول سند</p></div>`;
+        return;
+      }
+      box.innerHTML = [...list].reverse().slice(0, 3).map(s => sanadCardHTML(s)).join('');
+    }
+
+    function sanadCardHTML(s) {
+      const st = getStatus(s);
+      const paid = paidOf(s), pct = s.amount > 0 ? Math.min(100, Math.round(paid / s.amount * 100)) : 0;
+      const showProgress = st.key !== 'paid';
+      return `
+        <div class="sanad-card ${st.cls}" onclick="openDetail('${s.id}')">
+          <div class="sanad-top">
+            <div class="sanad-info">
+              <h4>${esc(s.debtor)}</h4>
+              <p>${s.id} · استحقاق: ${formatDate(s.date)}</p>
+            </div>
+            <div class="sanad-amount">
+              <div class="amount">${formatMoney(s.amount)}</div>
+              <div class="status ${st.key}">${st.label}</div>
+            </div>
+          </div>
+          ${showProgress ? `
+          <div class="progress-wrap">
+            <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <div class="progress-txt"><span>سُدد: ${formatMoney(paid)}</span><span>المتبقي: ${formatMoney(remainingOf(s))}</span></div>
+          </div>` : ''}
+        </div>`;
+    }
+
+    function setFilter(f) {
+      currentFilter = f;
+      document.querySelectorAll('#filter-bar .chip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+      renderMySanads();
+    }
+
+    function renderMySanads() {
+      const q = ($('search-input').value || '').trim().toLowerCase();
+      let list = [...mySanads()].reverse();
+      if (currentFilter !== 'all') list = list.filter(s => getStatus(s).key === currentFilter);
+      if (q) list = list.filter(s => s.debtor.toLowerCase().includes(q) || (s.id || '').toLowerCase().includes(q));
+
+      const box = $('mysanads-list');
+      if (!list.length) {
+        box.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>${q || currentFilter !== 'all' ? 'لا نتائج مطابقة' : 'لا توجد سندات محفوظة'}<br>${!q && currentFilter === 'all' ? 'اضغط + لإنشاء سند جديد' : ''}</p></div>`;
+        return;
+      }
+      box.innerHTML = list.map(s => sanadCardHTML(s)).join('');
+    }
+
+    function saveSanad() {
+      const u = currentUser();
+      const debtor = $('f-debtor').value.trim();
+      const phone = $('f-phone').value.trim();
+      const amount = Number($('f-amount').value);
+      const date = $('f-date').value;
+      const method = $('f-method').value;
+      const note = $('f-note').value.trim();
+
+      let ok = true;
+      setFieldError('f-debtor', debtor.length < 3 ? 'أدخل اسم المدين الكامل' : ''); if (debtor.length < 3) ok = false;
+      setFieldError('f-amount', !(amount > 0) ? 'أدخل مبلغاً صحيحاً أكبر من صفر' : ''); if (!(amount > 0)) ok = false;
+      setFieldError('f-date', !date ? 'اختر تاريخ الاستحقاق' : ''); if (!date) ok = false;
+      if (phone && !validPhone(phone)) { setFieldError('f-phone', 'رقم هاتف غير صحيح'); ok = false; } else setFieldError('f-phone', '');
+      if (!ok) { showToast('راجع الحقول المطلوبة', 'error'); return; }
+
+      if (editingId) {
+        const s = sanads.find(x => x.id === editingId);
+        if (s) Object.assign(s, { debtor, phone, amount, date, method, note });
+        DB.set(K.sanads, sanads);
+        showToast('تم تحديث السند ✓', 'success');
+        editingId = null;
+        openDetail(s.id);
+        return;
+      }
+
+      const newSanad = {
+        id: generateId(),
+        owner: session,
+        creditor: u.name,
+        debtor, phone, amount, date, method, note,
+        payments: [],
+        createdAt: new Date().toISOString()
+      };
+      sanads.push(newSanad);
+      DB.set(K.sanads, sanads);
+
+      ['f-debtor', 'f-phone', 'f-amount', 'f-date', 'f-note'].forEach(id => $(id).value = '');
+      showToast('تم حفظ السند ' + newSanad.id + ' ✓', 'success');
+      openDetail(newSanad.id);
+    }
+
+    function startEdit(id) {
+      const s = sanads.find(x => x.id === id);
+      if (!s) return;
+      editingId = id;
+      $('create-title').textContent = 'تعديل السند ' + id;
+      $('btn-save-sanad').textContent = 'حفظ التعديلات';
+      $('f-creditor').value = s.creditor;
+      $('f-debtor').value = s.debtor;
+      $('f-phone').value = s.phone || '';
+      $('f-amount').value = s.amount;
+      $('f-date').value = s.date;
+      $('f-method').value = s.method || 'نقدي';
+      $('f-note').value = s.note || '';
+      showScreen('create');
+    }
+
+    function resetCreateForm() {
+      editingId = null;
+      const u = currentUser();
+      $('create-title').textContent = 'إصدار سند أمانة';
+      $('btn-save-sanad').textContent = 'حفظ السند';
+      $('f-creditor').value = u ? u.name : '';
+      ['f-debtor', 'f-phone', 'f-amount', 'f-note'].forEach(id => $(id).value = '');
+      $('f-date').value = '';
+    }
+
+    function openDetail(id) {
+      const s = sanads.find(x => x.id === id);
+      if (!s) return;
+      detailId = id;
+      const st = getStatus(s);
+      const paid = paidOf(s), remain = remainingOf(s);
+      const pct = s.amount > 0 ? Math.min(100, Math.round(paid / s.amount * 100)) : 0;
+
+      $('detail-content').innerHTML = `
+        <div class="detail-hero">
+          <div class="status ${st.key}" style="font-size:14px; padding:6px 18px;">${st.label}</div>
+          <div class="big-amount">${formatMoney(s.amount)}</div>
+          <div class="sid">${s.id}</div>
+        </div>
+
+        ${st.key !== 'paid' ? `
+        <div class="card">
+          <div class="progress-wrap" style="margin:0 0 16px;">
+            <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <div class="progress-txt"><span>سُدد: ${formatMoney(paid)} (${pct}%)</span><span>المتبقي: ${formatMoney(remain)}</span></div>
+          </div>
+          <div class="actions-row">
+            <button class="btn btn-primary btn-small" onclick="openPaymentModal()">💵 تسجيل دفعة</button>
+            ${remain > 0 ? `<button class="btn btn-outline btn-small" onclick="markPaid()">✔ تسديد كامل</button>` : ''}
+          </div>
+        </div>` : `
+        <div class="card" style="text-align:center; padding:24px; background:var(--emerald-glow); border-color:var(--emerald);">
+          <div style="font-size:44px;">🎉</div>
+          <h3 style="color:var(--emerald-dark); font-size:18px; margin-top:10px;">تم سداد هذا السند بالكامل</h3>
+        </div>`}
+
+        <div class="card">
+          <div class="detail-row"><span>الدائن</span><span>${esc(s.creditor)}</span></div>
+          <div class="detail-row"><span>المدين</span><span>${esc(s.debtor)}</span></div>
+          <div class="detail-row"><span>هاتف المدين</span><span>${s.phone ? esc(s.phone) : '—'}</span></div>
+          <div class="detail-row"><span>طريقة السداد</span><span>${esc(s.method || 'نقدي')}</span></div>
+          <div class="detail-row"><span>تاريخ الاستحقاق</span><span>${formatDate(s.date)}</span></div>
+          <div class="detail-row"><span>تاريخ الإنشاء</span><span>${formatDate(s.createdAt)}</span></div>
+          ${s.note ? `<div class="detail-row"><span>ملاحظات</span><span>${esc(s.note)}</span></div>` : ''}
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:10px;">سجل الدفعات (${(s.payments || []).length})</div>
+          ${(s.payments || []).length ? [...s.payments].reverse().map((p, i) => `
+            <div class="payment-item">
+              <div><div class="p-amt">${formatMoney(p.amount)}</div><div class="p-date">${formatDate(p.date)}</div></div>
+              <span class="del" onclick="deletePayment(${(s.payments.length - 1 - i)})" title="حذف">🗑</span>
+            </div>`).join('')
+          : '<p class="text-muted" style="padding:12px 0;">لا توجد دفعات مسجلة بعد</p>'}
+        </div>
+
+        <div class="actions-row" style="margin-top:6px;">
+          <button class="btn btn-outline btn-small" onclick="printSanad()">🖨️ طباعة السند</button>
+          <button class="btn btn-outline btn-small" onclick="shareSanad()">🔗 مشاركة رابط التحقق</button>
+        </div>
+        <div class="actions-row" style="margin-top:12px;">
+          <button class="btn btn-outline btn-small" onclick="startEdit('${s.id}')">✏️ تعديل</button>
+          <button class="btn btn-danger btn-small" onclick="deleteSanad()">🗑️ حذف السند</button>
+        </div>
+        <p class="text-muted" style="text-align:center; margin-top:20px;">أرسل رابط المشاركة للمدين ليتمكن من التحقق من السند</p>
+      `;
+      showScreen('detail');
+    }
+
+    function openPaymentModal() {
+      openModal('تسجيل دفعة سداد', `
+        <div class="form-group" style="text-align:right">
+          <label>مبلغ الدفعة (دج)</label>
+          <input type="number" id="pay-amount" min="1" placeholder="0">
+        </div>
+        <div class="form-group" style="text-align:right">
+          <label>تاريخ الدفعة</label>
+          <input type="date" id="pay-date" value="${new Date().toISOString().slice(0, 10)}" max="${new Date().toISOString().slice(0, 10)}">
+        </div>`,
+        [
+          { label: 'إلغاء', fn: 'closeModal()' },
+          { label: 'تسجيل الدفعة', cls: 'btn-primary', fn: 'addPayment()' }
+        ]);
+      setTimeout(() => $('pay-amount').focus(), 250);
+    }
+
+    function addPayment() {
+      const s = sanads.find(x => x.id === detailId);
+      if (!s) return;
+      const amt = Number($('pay-amount').value);
+      const date = $('pay-date').value || new Date().toISOString().slice(0, 10);
+      if (!(amt > 0)) { showToast('أدخل مبلغاً صحيحاً', 'error'); return; }
+      if (amt > remainingOf(s)) { showToast('المبلغ أكبر من المتبقي (' + formatMoney(remainingOf(s)) + ')', 'error'); return; }
+      
+      s.payments.push({ amount: amt, date });
+      DB.set(K.sanads, sanads);
+      closeModal();
+      showToast('تم تسجيل الدفعة ✓', 'success');
+      openDetail(s.id);
+    }
+
+    function deletePayment(idx) {
+      const s = sanads.find(x => x.id === detailId);
+      if (!s || !s.payments[idx]) return;
+      openModal('حذف الدفعة', 'سيتم حذف هذه الدفعة وإعادة حساب المتبقي. متابعة؟', [
+        { label: 'إلغاء', fn: 'closeModal()' },
+        { label: 'حذف', cls: 'btn-danger', fn: `confirmDeletePayment(${idx})` }
+      ]);
+    }
+    function confirmDeletePayment(idx) {
+      const s = sanads.find(x => x.id === detailId);
+      if (s) { s.payments.splice(idx, 1); DB.set(K.sanads, sanads); }
+      closeModal();
+      showToast('تم حذف الدفعة');
+      openDetail(detailId);
+    }
+
+    function markPaid() {
+      const s = sanads.find(x => x.id === detailId);
+      if (!s) return;
+      const remain = remainingOf(s);
+      openModal('تسديد كامل', `سيتم تسجيل دفعة نهائية بقيمة <b>${formatMoney(remain)}</b> وإغلاق السند. متابعة؟`, [
+        { label: 'إلغاء', fn: 'closeModal()' },
+        { label: 'تأكيد السداد', cls: 'btn-primary', fn: 'confirmMarkPaid()' }
+      ]);
+    }
+    function confirmMarkPaid() {
+      const s = sanads.find(x => x.id === detailId);
+      if (s) {
+        s.payments.push({ amount: remainingOf(s), date: new Date().toISOString().slice(0, 10), final: true });
+        DB.set(K.sanads, sanads);
+      }
+      closeModal();
+      showToast('تم إغلاق السند — سدد بالكامل ✓', 'success');
+      openDetail(detailId);
+    }
+
+    function deleteSanad() {
+      const s = sanads.find(x => x.id === detailId);
+      if (!s) return;
+      openModal('حذف السند نهائياً', `سيتم حذف السند <b>${s.id}</b> الخاص بـ <b>${esc(s.debtor)}</b> وجميع دفعاته. لا يمكن التراجع.`, [
+        { label: 'إلغاء', fn: 'closeModal()' },
+        { label: 'حذف نهائي', cls: 'btn-danger', fn: 'confirmDeleteSanad()' }
+      ]);
+    }
+    function confirmDeleteSanad() {
+      sanads = sanads.filter(x => x.id !== detailId);
+      DB.set(K.sanads, sanads);
+      notifs = notifs.filter(n => n.sanadId !== detailId);
+      DB.set(K.notifs, notifs);
+      closeModal();
+      showToast('تم حذف السند');
+      showScreen('mysanads');
+    }
+
+    function printSanad() {
+      const s = sanads.find(x => x.id === detailId);
+      if (!s) return;
+      const st = getStatus(s);
+      const w = window.open('', '_blank', 'width=800,height=900');
+      if (!w) { showToast('اسمح بالنوافذ المنبثقة للطباعة', 'error'); return; }
+      w.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
+        <title>سند أمانة ${s.id}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+          body { font-family: 'Cairo', Tahoma, sans-serif; padding: 40px; color: #0F172A; direction: rtl; background: #fff; }
+          .doc { border: 2px solid #0F172A; border-radius: 24px; padding: 48px; max-width: 640px; margin: auto; position: relative; overflow: hidden; }
+          .doc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 8px; background: linear-gradient(90deg, #10B981, #D4AF37); }
+          .head { text-align: center; border-bottom: 2px dashed #CBD5E1; padding-bottom: 24px; margin-bottom: 32px; }
+          .head h1 { font-size: 32px; margin-bottom: 8px; font-weight: 900; color: #0F172A; }
+          .head p { font-size: 14px; color: #64748B; font-weight: 600; }
+          .row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #F1F5F9; font-size: 16px; }
+          .row span:first-child { color: #64748B; font-weight: 600; }
+          .row b { font-weight: 800; color: #0F172A; }
+          .amount-wrap { background: #F8FAFC; border-radius: 16px; padding: 24px; text-align: center; margin: 32px 0; border: 1px solid #E2E8F0; }
+          .amount { font-size: 40px; font-weight: 900; color: #059669; }
+          .status { font-size: 14px; font-weight: 700; color: ${st.key === 'paid' ? '#3B82F6' : st.key === 'expired' ? '#EF4444' : '#059669'}; margin-top: 8px; }
+          .sig { display: flex; justify-content: space-between; margin-top: 60px; font-size: 14px; font-weight: 700; }
+          .sig div { text-align: center; flex: 1; color: #64748B; }
+          .sig .line { border-top: 1.5px solid #0F172A; margin: 50px 20px 12px; }
+          .foot { text-align: center; font-size: 12px; color: #94A3B8; margin-top: 40px; font-weight: 600; }
+          @media print { body { padding: 0; } .doc { border: none; padding: 20px; } }
+        </style></head><body>
+        <div class="doc">
+          <div class="head"><h1>📜 سند أمانة</h1><p>سندك — سندات أمانة ذكية وموثوقة</p></div>
+          <div class="row"><span>رقم السند</span><b>${s.id}</b></div>
+          <div class="row"><span>الدائن</span><b>${esc(s.creditor)}</b></div>
+          <div class="row"><span>المدين</span><b>${esc(s.debtor)}</b></div>
+          <div class="row"><span>هاتف المدين</span><b>${esc(s.phone || '—')}</b></div>
+          <div class="row"><span>تاريخ الاستحقاق</span><b>${formatDate(s.date)}</b></div>
+          <div class="row"><span>طريقة السداد</span><b>${esc(s.method || 'نقدي')}</b></div>
+          ${s.note ? `<div class="row"><span>ملاحظات</span><b>${esc(s.note)}</b></div>` : ''}
+          <div class="amount-wrap">
+            <div class="amount">${formatMoney(s.amount)}</div>
+            <div class="status">الحالة: ${st.label} · سُدد: ${formatMoney(paidOf(s))} · المتبقي: ${formatMoney(remainingOf(s))}</div>
+          </div>
+          <div class="sig">
+            <div><div class="line"></div>توقيع الدائن</div>
+            <div><div class="line"></div>توقيع المدين</div>
+          </div>
+          <div class="foot">أُنشئ إلكترونياً عبر تطبيق سندك بتاريخ ${formatDate(s.createdAt)}</div>
+        </div>
+        <script>window.onload = () => window.print();<\/script>
+        </body></html>`);
+      w.document.close();
+    }
+
+    function shareSanad() {
+      const s = sanads.find(x => x.id === detailId);
+      if (!s) return;
+      const payload = {
+        id: s.id, creditor: s.creditor, debtor: s.debtor,
+        amount: s.amount, paid: paidOf(s), remain: remainingOf(s),
+        date: s.date, method: s.method || '', note: s.note || ''
+      };
+      
+      const signed = signPayload(payload);
+      const link = location.href.split('?')[0] + '?v=' + encodeURIComponent(signed);
+
+      if (navigator.share) {
+        navigator.share({ title: 'سند أمانة ' + s.id, text: 'سند أمانة من ' + s.creditor + ' — للتحقق افتح الرابط', url: link }).catch(() => {});
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(link).then(
+          () => showToast('تم نسخ رابط التحقق ✓ — أرسله للمدين', 'success'),
+          () => showToast('تعذر النسخ', 'error')
+        );
+      } else {
+        prompt('انسخ رابط التحقق:', link);
+      }
+    }
+
+    function renderVerifyResult(p, fromLink) {
+      const fullyPaid = Number(p.remain) <= 0;
+      const diff = daysUntil(p.date);
+      const state = fullyPaid ? { icon: '✅', color: 'var(--emerald-dark)', title: 'سند صحيح — سُدد بالكامل' }
+        : diff < 0 ? { icon: '⚠️', color: '#B45309', title: 'سند صحيح — منتهي الصلاحية وغير مسدد' }
+        : { icon: '✅', color: 'var(--emerald-dark)', title: 'سند صحيح وساري' };
+      $('verify-result').innerHTML = `
+        <div class="card" style="text-align:center; padding:28px 20px; border-color: ${state.color}; border-width: 2px;">
+          <div style="font-size:52px; margin-bottom:12px;">${state.icon}</div>
+          <h3 style="color:${state.color}; font-size:20px; margin-bottom:8px; font-weight:900;">${state.title}</h3>
+          <p class="text-muted" style="margin-bottom:20px;">${fromLink ? 'تم التحقق عبر رابط مشاركة موقّع رقمياً' : 'تم العثور على السند في السجلات المحلية'}</p>
+          <div style="text-align:right; background:var(--gray-50); border-radius:16px; padding:16px; font-size:14px;">
+            <div class="detail-row"><span>رقم السند</span><span>${esc(p.id)}</span></div>
+            <div class="detail-row"><span>الدائن</span><span>${esc(p.creditor || '—')}</span></div>
+            <div class="detail-row"><span>المدين</span><span>${esc(p.debtor)}</span></div>
+            <div class="detail-row"><span>المبلغ</span><span>${formatMoney(p.amount)}</span></div>
+            <div class="detail-row"><span>سُدد</span><span>${formatMoney(p.paid)}</span></div>
+            <div class="detail-row"><span>المتبقي</span><span>${formatMoney(p.remain)}</span></div>
+            <div class="detail-row"><span>الاستحقاق</span><span>${formatDate(p.date)}</span></div>
+          </div>
+        </div>`;
+      $('verify-result').classList.remove('hidden');
+    }
+
+    function doVerify() {
+      const input = ($('verify-input').value || '').trim().toUpperCase();
+      if (!input) { showToast('أدخل رقم السند أولاً', 'error'); return; }
+      const found = sanads.find(s => s.id === input);
+      if (found) {
+        renderVerifyResult({ id: found.id, creditor: found.creditor, debtor: found.debtor, amount: found.amount, paid: paidOf(found), remain: remainingOf(found), date: found.date }, false);
+      } else {
+        $('verify-result').innerHTML = `
+          <div class="card" style="text-align:center; padding:32px 20px; border-color:var(--danger); border-width:2px;">
+            <div style="font-size:52px; margin-bottom:12px;">❌</div>
+            <h3 class="text-danger" style="font-size:20px; margin-bottom:8px; font-weight:900;">السند غير موجود</h3>
+            <p class="text-muted">تأكد من الرقم أو اطلب رابط المشاركة من الدائن</p>
+          </div>`;
+        $('verify-result').classList.remove('hidden');
+      }
+    }
+
+    function renderProfile() {
+      const u = currentUser();
+      if (!u) return;
+      $('profile-name').textContent = u.name;
+      $('profile-phone').textContent = u.phone + ' · عضو منذ ' + formatDate(u.createdAt);
+      $('avatar-letter').textContent = u.name.trim().charAt(0);
+
+      const list = mySanads();
+      const total = list.reduce((a, s) => a + Number(s.amount), 0);
+      const paid = list.reduce((a, s) => a + paidOf(s), 0);
+      const pct = total > 0 ? Math.round(paid / total * 100) : 0;
+      $('pf-total').textContent = list.length;
+      $('pf-collected').textContent = pct + '%';
+      $('pf-trust').textContent = list.length === 0 ? '—' : (pct >= 80 ? 'A' : pct >= 50 ? 'B' : pct >= 25 ? 'C' : 'D');
+    }
+
+    function openEditProfile() {
+      const u = currentUser();
+      openModal('تعديل الاسم', `
+        <div class="form-group" style="text-align:right">
+          <label>الاسم الكامل</label>
+          <input type="text" id="edit-name" value="${esc(u.name)}">
+        </div>`,
+        [
+          { label: 'إلغاء', fn: 'closeModal()' },
+          { label: 'حفظ', cls: 'btn-primary', fn: 'saveProfileName()' }
+        ]);
+      setTimeout(() => $('edit-name').focus(), 250);
+    }
+    function saveProfileName() {
+      const name = $('edit-name').value.trim();
+      if (name.length < 3) { showToast('الاسم قصير جداً', 'error'); return; }
+      const u = currentUser();
+      u.name = name;
+      DB.set(K.users, users);
+      mySanads().forEach(s => s.creditor = name);
+      DB.set(K.sanads, sanads);
+      closeModal();
+      renderProfile();
+      $('greet-name').textContent = 'مرحباً، ' + name.split(' ')[0] + ' 👋';
+      showToast('تم تحديث الاسم ✓', 'success');
+    }
+
+    function exportData() {
+      const data = { user: currentUser(), sanads: mySanads(), exportedAt: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'sandak-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('تم تصدير نسخة احتياطية ✓', 'success');
+    }
+
+    function clearAllData() {
+      openModal('مسح جميع السندات', 'سيتم حذف جميع سنداتك ودفعاتك نهائياً من هذا الجهاز. أنصح بتصدير نسخة احتياطية أولاً.', [
+        { label: 'إلغاء', fn: 'closeModal()' },
+        { label: 'مسح الكل', cls: 'btn-danger', fn: 'confirmClearAll()' }
+      ]);
+    }
+    function confirmClearAll() {
+      sanads = sanads.filter(s => s.owner !== session);
+      notifs = [];
+      DB.set(K.sanads, sanads);
+      DB.set(K.notifs, notifs);
+      closeModal();
+      showToast('تم مسح جميع السندات');
+      renderHome();
+      updateBadge();
+      showScreen('home');
+    }
+
+    const _origShowScreen = showScreen;
+    showScreen = function (name) {
+      if (name !== 'create') editingId = null;
+      else if (!editingId) resetCreateForm();
+      _origShowScreen(name);
+    };
+
+    function handleSharedLink() {
+      const m = location.search.match(/[?&]v=([^&]+)/);
+      if (!m) return false;
+      try {
+        const payload = verifySignature(decodeURIComponent(m[1]));
+        if (payload && payload.id) {
+          renderVerifyResult(payload, true);
+          $('verify-input').value = payload.id;
+          return true;
+        }
+      } catch { /* invalid payload */ }
+      return false;
+    }
+
+    (function init() {
+      renderNav('home');
+      if (session && currentUser()) {
+        if (handleSharedLink()) {
+          showScreen('verify');
+          showToast('تم فتح رابط تحقق آمن 🔍', 'success');
+          history.replaceState(null, '', location.pathname);
+        } else {
+          enterApp();
+        }
+      } else {
+        if (handleSharedLink()) {
+          showScreen('verify');
+          history.replaceState(null, '', location.pathname);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
